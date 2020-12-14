@@ -8,7 +8,7 @@ Data: 14.12.2020r.
 
 # Informacje o studencie
 
-Imię i nazwisko studenta: Emil Woźniak  
+Imię i nazwisko studenta: Emil  Woźniak  
 Numer albumu: 72558
 Grupa studencka: WEL18DE1S1
 
