@@ -1,48 +1,43 @@
 #include <Arduino.h>
-#include <stdio.h>
+#include <stdint.h>
 
-char rxBuff[32];
-int bytesNo = 0;
-char paramStr[16];
-int paramVal = 0;
-
+#define FOSC 16000000
+#define BAUD 9600
+#define MY_UBRR (FOSC / 16 / BAUD - 1)
+#define USE_UART_RX_IRQ 1
+char ReceivedChar
+char Message[] = "Hello";
+char * pMessage = Message;
 void setup() {
-Serial.begin(9600);
-Serial.setTimeout(4000);
+  /*Konfiguracja szybkości pracy*/
+  UBRR0H = (MY_UBRR >> 8);
+  UBRR0L = MY_UBRR;
+  UCSR0B |= (1 << RXEN0) | (1 << TXEN0); //Włączenie nadajnika i odbiornika
+  UCSR0C |= (1 << UCSZ01) | (1 << UCSZ00); //Format ramki: 8 data, 1 stop
 
-pinMode(LED_BUILTIN, OUTPUT);
+  while(*pMessage) { //Wysyłanie wiadomości
+  while (!(UCSR0A & (1<<UDRE0)) );
+  UDR0 = *pMessage;
+  pMessage++;
 }
-
-void loop() {
-bytesNo = Serial.readBytesUntil('\r', rxBuff, sizeof(rxBuff) - 1);
-
-sscanf(rxBuff, "%s %d", paramStr, &paramVal);
-
-if (bytesNo) {
-  Serial.print("Wykonuje...");
-  if (!strcmp(paramStr, "led")) {
-    if (paramVal) {
-      digitalWrite(LED_BUILTIN, HIGH);
-    } else {
-      digitalWrite(LED_BUILTIN, LOW);
-    }
-    Serial.ptintln("OK!");
-  } else if (!strcmp(paramStr, "blink")) {
-    for(int i = 0; i < paramVal; i++) {
-      digitalWrite(LED_BUILTIN, HIGH); delay(500);
-      digitalWrite(LED_BUILTIN, LOW); delay(500);
-    }
-    Serial.println("OK!");
-  } else {
-    Serial.println("Blad!");
-  }
-  }
-
-  for (int i = 0; i < Serial.available(); i++) {
-    Serial.read();
-  }
-
-  for (int i = 0; i < sizeof(rxBuff); i++) {
-    rxBuff[i] = 0;
-  }
+/*Wait for empty transmit buffer*/
+#if (USE_UART_RX_IRQ == 1)
+UCSR0B |= (1 << RXCIE0); // Włączenie przerwania odbiornika
+#endif
 }
+void loop(){
+  #if (USE_UART_RX_IRQ == 0)
+  while (!(UCSR0A & (1 << RXC0)))
+  ; //Czekaj na odebranie danych
+  ReceivedChar = UDR0; //Odebranie znaku z bufora RX
+  while (!(UCSR0A & (1 << UDRE0)))
+  ; // Czekaj na pusty bufor nadawczy
+  UDR0 = ReceivedChar;  //Wysłanie znaku do bufora TX
+  #endif
+}
+#if (USE_UART_RX_IRQ == 1)
+ISR (USART_RX_vect){
+  ReceivedChar = UDR0; //Odebranie znaku z bufora RX
+  UDR0 = ReceivedChar; //Wysłanie znaku do bufora TX
+}
+#endif
