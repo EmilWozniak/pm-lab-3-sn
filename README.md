@@ -13,4 +13,5 @@ Numer albumu: 72558
 Grupa studencka: WEL18DE1S1
 
 # Odpowiedzi do pytań z instrukcji
-...
+1. W jaki sposób można rozbudować funkcjonalność programu w przypadku gdzy liczba naciśnięć przycisku przekroczy określoną ilość?
+Aby rozbudować funkcjonalność programu w przypadku gdzy liczba naciśnięć przycisku przekroczy określoną ilość, należy w kodzie programu po instrukcji w linijce 26, dodać pętle wewnętrzną (np. if), która będzie wprowadzała określoną przez użytkownika maksymalną wartość naciśnięć przycisku, po której program np. wyłączy się.
